@@ -1,0 +1,71 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "presence": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['online', 'gender', 'country']) && newData.child('online').isBoolean() && newData.child('gender').isString() && newData.child('country').isString() && (!newData.child('languages').exists() || newData.child('languages').hasChildren())"
+      }
+    },
+    "profiles": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['gender', 'country', 'languages'])"
+      }
+    },
+    "queue": {
+      ".read": false,
+      ".write": false
+    },
+    "sessions": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
+    },
+    "matches": {
+      "$matchId": {
+        ".read": "auth != null && data.child('members').child(auth.uid).val() === true",
+        "signals": {
+          "$uid": {
+            ".read": "auth != null && root.child('matches').child($matchId).child('members').child(auth.uid).val() === true",
+            ".write": "auth != null && auth.uid === $uid && root.child('matches').child($matchId).child('members').child(auth.uid).val() === true"
+          }
+        },
+        "likes": {
+          "$uid": {
+            ".read": "auth != null && root.child('matches').child($matchId).child('members').child(auth.uid).val() === true",
+            ".write": "auth != null && auth.uid === $uid && root.child('matches').child($matchId).child('members').child(auth.uid).val() === true",
+            ".validate": "newData.isBoolean()"
+          }
+        }
+      }
+    },
+    "friendRequests": {
+      ".read": false,
+      ".write": false
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "friends": { ".write": false },
+        "incomingRequests": { ".write": false },
+        "outgoingRequests": { ".write": false }
+      }
+    },
+    "friendships": {
+      "$friendshipId": {
+        ".read": "auth != null && data.child('status').val() === 'accepted' && data.child('members').child(auth.uid).val() === true",
+        "messages": {
+          "$messageId": {
+            ".write": "auth != null && root.child('friendships').child($friendshipId).child('status').val() === 'accepted' && root.child('friendships').child($friendshipId).child('members').child(auth.uid).val() === true && !data.exists() && newData.child('senderUid').val() === auth.uid",
+            ".validate": "newData.hasChildren(['senderUid', 'text', 'createdAt']) && newData.child('senderUid').isString() && newData.child('text').isString() && newData.child('text').val().length > 0 && newData.child('text').val().length <= 500 && newData.child('createdAt').isNumber()"
+          }
+        }
+      }
+    }
+  }
+}
