@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f7fb">
+  <title>mingle — meet someone new</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #202033;
+      --muted: #85869a;
+      --line: #ececf3;
+      --purple: #7654ec;
+      --purple-dark: #6040d2;
+      --lilac: #f0edff;
+      --green: #18a77a;
+      --bg: #f7f7fb;
+      --white: #fff;
+      --shadow: 0 10px 36px rgba(39, 34, 78, .055);
+      font-family: "DM Sans", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 340px; background: var(--bg); color: var(--ink); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .topbar { height: 76px; background: rgba(255,255,255,.88); border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 max(28px, calc((100vw - 1440px)/2)); gap: 36px; position: sticky; top: 0; z-index: 5; backdrop-filter: blur(18px); }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font: 800 23px Manrope, sans-serif; letter-spacing: -1.2px; }
+    .brand-mark { width: 34px; height: 34px; border-radius: 12px; background: linear-gradient(135deg, #977eff, #6946e9); display: grid; place-items: center; box-shadow: 0 5px 12px #7b5bed44; }
+    .brand-mark svg { width: 21px; height: 21px; }
+    .nav { display: flex; height: 100%; gap: 30px; align-items: center; }
+    .nav-link { height: 100%; display: inline-flex; align-items: center; gap: 8px; position: relative; border: 0; background: none; color: #77788d; font-size: 14px; font-weight: 600; padding: 0 2px; }
+    .nav-link.active { color: var(--purple); }
+    .nav-link.active:after { content: ""; height: 2px; background: var(--purple); position: absolute; left: 0; right: 0; bottom: 0; border-radius: 3px 3px 0 0; }
+    .nav-dot { width: 7px; height: 7px; background: #25c38f; border-radius: 50%; }
+    .online-pill { color: #67687d; background: #f5f5f9; border: 1px solid #eeeef4; border-radius: 999px; padding: 8px 12px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; margin-left: auto; white-space: nowrap; }
+    .online-pill strong { color: var(--ink); font-weight: 700; }
+    .online-pulse { width: 7px; height: 7px; border-radius: 50%; background: #21b785; box-shadow: 0 0 0 3px #21b78520; }
+    .profile { display: flex; align-items: center; gap: 10px; margin-left: 4px; }
+    .profile-name { font-size: 13px; font-weight: 600; }
+    .avatar { height: 34px; width: 34px; display: grid; place-items: center; border-radius: 50%; color: #6949d9; background: #eeeaff; font-weight: 700; font-size: 12px; }
+    .auth-control { display: flex; align-items: center; margin-left: 4px; }
+    .google-signin { display: inline-flex; align-items: center; gap: 8px; border: 1px solid #e4e4ec; background: #fff; color: #4a4b5e; border-radius: 9px; padding: 9px 12px; font-size: 11px; font-weight: 700; white-space: nowrap; box-shadow: 0 2px 6px #27274708; }
+    .google-signin:hover { background: #fafaff; border-color: #cfc7f8; }
+    .google-g { font: 700 16px/1 Arial, sans-serif; background: conic-gradient(from -40deg, #4285f4 0 27%, #34a853 27% 48%, #fbbc05 48% 71%, #ea4335 71% 86%, #4285f4 86%); color: transparent; background-clip: text; }
+    .signed-in-profile { display: flex; align-items: center; gap: 8px; }
+    .signed-in-profile img { width: 32px; height: 32px; object-fit: cover; border-radius: 50%; }
+    .signout-button { border: 0; background: none; color: #85869a; font-size: 10px; padding: 6px 0 6px 4px; }
+    .signout-button:hover { color: var(--purple); }
+    .page { max-width: 1440px; margin: 0 auto; padding: 32px 28px 40px; }
+    .welcome { display: flex; align-items: end; justify-content: space-between; margin: 0 0 24px; }
+    .eyebrow { display: flex; align-items: center; gap: 8px; color: var(--purple); text-transform: uppercase; letter-spacing: 1.4px; font-size: 10px; font-weight: 700; margin-bottom: 9px; }
+    .eyebrow-mark { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); }
+    h1 { font: 800 27px/1.15 Manrope, sans-serif; letter-spacing: -.9px; margin: 0 0 7px; }
+    .welcome p { color: var(--muted); font-size: 13px; margin: 0; }
+    .safety-link { border: 0; background: none; color: #7c7c92; display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 8px 0; }
+    .layout { display: grid; grid-template-columns: 228px minmax(400px, 1fr) 278px; align-items: start; gap: 18px; }
+    .panel { background: var(--white); border: 1px solid var(--line); border-radius: 17px; box-shadow: var(--shadow); }
+    .filters { padding: 20px 17px; }
+    .panel-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .panel-heading h2 { font: 700 14px Manrope, sans-serif; margin: 0; }
+    .reset { border: 0; color: var(--purple); background: none; padding: 4px 0; font-size: 11px; font-weight: 600; }
+    .filter-section { padding: 16px 0; border-top: 1px solid #f0f0f5; }
+    .filter-section:first-of-type { border-top: 0; padding-top: 0; }
+    .filter-title { color: #55566c; font-size: 11px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; margin: 0 0 11px; }
+    .filter-title span:last-child { color: #a3a3b1; font-size: 10px; font-weight: 500; }
+    .gender-options { background: #f6f6fa; border-radius: 10px; padding: 3px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .gender-btn { border: 0; border-radius: 8px; padding: 8px 2px; background: transparent; color: #818196; font-size: 10px; font-weight: 600; transition: .15s ease; }
+    .gender-btn.selected { background: white; color: var(--purple); box-shadow: 0 1px 5px #24244212; }
+    .select-wrap { position: relative; }
+    select { appearance: none; width: 100%; color: #3e3f54; background: #fff; border: 1px solid #e9e9f1; border-radius: 9px; padding: 10px 30px 10px 11px; outline: 0; font-size: 11px; }
+    select:focus { border-color: #ad9bf8; box-shadow: 0 0 0 3px #7654ec15; }
+    .select-arrow { position: absolute; right: 11px; top: 11px; pointer-events: none; color: #9090a4; }
+    .language-search input { width: 100%; border: 1px solid #e9e9f1; border-radius: 9px; padding: 10px 11px; outline: 0; color: #3e3f54; font-size: 11px; }
+    .language-search input:focus { border-color: #ad9bf8; box-shadow: 0 0 0 3px #7654ec15; }
+    .selected-languages { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 8px; }
+    .selected-language { border: 1px solid #ded7ff; border-radius: 16px; background: #f2efff; color: var(--purple); display: inline-flex; align-items: center; gap: 5px; padding: 5px 7px 5px 9px; font-size: 9px; }
+    .selected-language button { border: 0; background: transparent; color: inherit; font-size: 13px; line-height: 10px; padding: 0 1px; }
+    .language-list { display: none; max-height: 174px; overflow-y: auto; margin-top: 7px; padding: 3px; border: 1px solid #ececf3; border-radius: 10px; background: white; }
+    .language-list.open { display: block; }
+    .language-option { width: 100%; border: 0; border-radius: 7px; background: transparent; color: #606176; padding: 8px 7px; display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; font-size: 10px; }
+    .language-option:hover, .language-option.selected { background: #f4f1ff; color: var(--purple); }
+    .language-option small { flex: 0 0 auto; color: #aaaaba; font: 9px "DM Sans", sans-serif; }
+    .language-hint, .language-more, .language-empty { color: #9494a6; font-size: 9px; line-height: 1.5; padding: 7px 3px 0; }
+    .language-more, .language-empty { padding: 8px; }
+    .filter-foot { border-top: 1px solid #f0f0f5; padding-top: 15px; margin-top: 1px; color: #77788d; display: flex; justify-content: space-between; align-items: center; font-size: 10px; }
+    .filter-foot strong { color: #292a40; font-size: 11px; }
+    .stage-column { min-width: 0; }
+    .stage-head { display: flex; align-items: center; justify-content: space-between; margin: 1px 3px 12px; }
+    .stage-title { font-size: 13px; font-weight: 700; }
+    .demo-label { display: inline-flex; align-items: center; gap: 5px; color: #8a8a9c; font-size: 10px; }
+    .demo-label svg { color: #a4a4b4; }
+    .video-stage { position: relative; overflow: hidden; width: 100%; aspect-ratio: 1.48; border-radius: 17px; background: #201e35; box-shadow: 0 16px 36px #2920441a; isolation: isolate; }
+    .stage-placeholder { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; background: radial-gradient(ellipse at 73% 22%, #615396 0, #383250 31%, #211f33 76%); color: white; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(1px); opacity: .34; }
+    .orb.one { width: 230px; height: 230px; background: #a48cf8; right: -56px; top: -103px; }
+    .orb.two { width: 156px; height: 156px; background: #ef9db8; left: -58px; bottom: -65px; opacity: .2; }
+    .placeholder-copy { position: relative; text-align: center; max-width: 330px; padding: 24px; }
+    .hello-illustration { width: 84px; height: 84px; border-radius: 26px; background: #ffffff16; border: 1px solid #ffffff27; display: grid; place-items: center; margin: 0 auto 20px; box-shadow: inset 0 1px 10px #ffffff15; }
+    .hello-illustration svg { width: 43px; height: 43px; }
+    .placeholder-copy h3 { font: 700 19px Manrope, sans-serif; margin: 0 0 8px; letter-spacing: -.4px; }
+    .placeholder-copy p { color: #d4d0e4; font-size: 11px; line-height: 1.6; margin: 0 auto 18px; max-width: 270px; }
+    .primary-button { border: 0; background: linear-gradient(115deg, #9276ff, #704de9); color: white; border-radius: 10px; padding: 12px 17px; font-size: 12px; font-weight: 700; box-shadow: 0 8px 18px #704de944; transition: transform .15s, box-shadow .15s; }
+    .primary-button:hover { transform: translateY(-1px); box-shadow: 0 10px 22px #704de955; }
+    .camera-note { margin: 12px 0 0; color: #c0bbd1; font-size: 9px; }
+    .person-view { position: absolute; inset: 0; display: none; background: #211d31; }
+    .person-view.visible { display: block; }
+    .person-photo { width: 100%; height: 100%; object-fit: cover; object-position: 50% 42%; filter: saturate(.84); }
+    .person-shade { position: absolute; inset: 0; background: linear-gradient(180deg, #1614249c 0%, transparent 30%, transparent 53%, #181525b8 100%); }
+    .person-top { position: absolute; left: 16px; right: 16px; top: 15px; display: flex; justify-content: space-between; align-items: start; }
+    .live-chip { background: #211f33a8; backdrop-filter: blur(12px); border: 1px solid #ffffff22; border-radius: 20px; padding: 7px 10px; color: white; display: flex; align-items: center; gap: 7px; font-size: 9px; font-weight: 700; letter-spacing: .4px; }
+    .live-chip .green-dot { width: 6px; height: 6px; background: #55e1ac; border-radius: 50%; box-shadow: 0 0 8px #55e1ac; }
+    .timer-chip { background: #211f33a8; backdrop-filter: blur(12px); border: 1px solid #ffffff22; border-radius: 20px; padding: 7px 10px; color: white; font-size: 10px; }
+    .person-info { position: absolute; left: 18px; bottom: 18px; color: white; }
+    .person-info h3 { font: 700 20px Manrope, sans-serif; margin: 0 0 6px; text-shadow: 0 1px 8px #0007; }
+    .person-meta { display: flex; gap: 8px; align-items: center; color: #f3f1f8; font-size: 10px; }
+    .meta-divider { width: 3px; height: 3px; background: #ffffff99; border-radius: 50%; }
+    .person-tags { display: flex; gap: 6px; margin-top: 10px; }
+    .person-tags span { background: #ffffff24; border: 1px solid #ffffff25; border-radius: 20px; padding: 5px 8px; color: #faf9ff; font-size: 9px; backdrop-filter: blur(10px); }
+    .local-card { position: absolute; right: 14px; bottom: 14px; width: 116px; height: 84px; border-radius: 11px; background: linear-gradient(145deg,#534578,#28253b); border: 1px solid #ffffff69; overflow: hidden; box-shadow: 0 5px 18px #0004; display: grid; place-items: center; }
+    .local-card video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); display: none; }
+    .local-card video.on { display: block; }
+    .local-camera-icon { color: #fff9; text-align: center; font-size: 9px; }
+    .local-camera-icon svg { display: block; margin: 0 auto 5px; }
+    .local-label { position: absolute; left: 6px; bottom: 5px; color: white; background: #151422aa; padding: 3px 6px; border-radius: 8px; font-size: 8px; }
+    .stage-actions { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 14px 0 0; }
+    .action-button { min-width: 89px; height: 39px; border: 1px solid #e7e7ef; background: white; color: #68697e; border-radius: 10px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 7px; box-shadow: 0 2px 6px #27274708; transition: .15s; }
+    .action-button:hover { border-color: #cfc7f8; color: var(--purple); }
+    .action-button.like { background: #fff6f8; color: #df6280; border-color: #f9e0e6; min-width: 105px; }
+    .action-button.like:hover { background: #ffedf1; border-color: #f4cbd4; }
+    .action-button.like.liked { color: white; background: #e9758d; border-color: #e9758d; }
+    .action-button:disabled { opacity: .56; cursor: default; }
+    .under-stage { margin: 15px 3px 0; color: #85869a; font-size: 10px; line-height: 1.5; text-align: center; }
+    .right-panel { overflow: hidden; }
+    .right-head { display: flex; padding: 16px 16px 0; align-items: center; justify-content: space-between; }
+    .right-head h2 { margin: 0; font: 700 14px Manrope, sans-serif; }
+    .friend-count { color: var(--purple); background: #f1eeff; padding: 4px 7px; min-width: 22px; text-align: center; border-radius: 10px; font-size: 10px; font-weight: 700; }
+    .right-tabs { display: flex; gap: 18px; border-bottom: 1px solid #f0f0f5; padding: 12px 16px 0; }
+    .right-tab { border: 0; background: none; color: #9292a4; font-size: 10px; font-weight: 600; padding: 0 0 10px; position: relative; }
+    .right-tab.active { color: var(--purple); }
+    .right-tab.active:after { content: ""; height: 2px; position: absolute; bottom: -1px; left: 0; right: 0; background: var(--purple); border-radius: 2px; }
+    .friend-content { min-height: 310px; }
+    .friends-empty { text-align: center; padding: 38px 21px 26px; }
+    .empty-icon { width: 58px; height: 58px; border-radius: 19px; display: grid; place-items: center; margin: 0 auto 14px; color: #967ef1; background: #f2efff; }
+    .empty-icon svg { width: 27px; height: 27px; }
+    .friends-empty h3 { margin: 0 0 6px; font: 700 12px Manrope, sans-serif; }
+    .friends-empty p { color: #8a8a9d; font-size: 10px; line-height: 1.55; margin: 0 auto; max-width: 190px; }
+    .friend-list { padding: 9px 9px 12px; }
+    .friend-row { display: flex; align-items: center; gap: 9px; padding: 9px 7px; border-radius: 11px; }
+    .friend-row:hover { background: #faf9fd; }
+    .friend-photo { width: 36px; height: 36px; border-radius: 12px; object-fit: cover; background: #eeeaff; }
+    .friend-copy { min-width: 0; flex: 1; }
+    .friend-name { font-size: 10px; font-weight: 700; margin-bottom: 3px; }
+    .friend-sub { color: #9494a5; font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .friend-online { width: 6px; height: 6px; border-radius: 50%; background: #23ba88; }
+    .open-chat { border: 0; background: transparent; color: var(--purple); font-size: 9px; font-weight: 700; padding: 7px 5px; }
+    .request-content { min-height: 310px; }
+    .request-list { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .request-card { padding: 10px; border: 1px solid #efedf6; border-radius: 12px; }
+    .request-person { display: flex; align-items: center; gap: 8px; }
+    .request-person .friend-photo { width: 34px; height: 34px; border-radius: 11px; }
+    .request-status { color: #8e8ea0; font-size: 9px; margin-top: 4px; }
+    .request-status.incoming { color: #159b72; }
+    .request-actions { display: flex; gap: 6px; margin-top: 10px; }
+    .request-actions button { flex: 1; border: 1px solid #e8e6f0; background: white; color: #73748a; border-radius: 8px; padding: 7px 5px; font-size: 9px; font-weight: 700; }
+    .request-actions button.accept-request { color: white; border-color: var(--purple); background: var(--purple); }
+    .request-actions button:hover { border-color: #b8aaf3; }
+    .request-actions button.accept-request:hover { background: var(--purple-dark); }
+    .request-empty { text-align: center; padding: 34px 18px 24px; }
+    .request-empty h3 { margin: 0 0 6px; font: 700 12px Manrope, sans-serif; }
+    .request-empty p { color: #8a8a9d; font-size: 10px; line-height: 1.55; margin: 0 auto; max-width: 190px; }
+    .request-count { color: inherit; font-size: 9px; font-weight: 700; margin-left: 2px; }
+    .chat-view { display: none; }
+    .chat-view.open { display: flex; height: 366px; flex-direction: column; }
+    .chat-header { padding: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f0f0f5; }
+    .back-chat { border: 0; background: transparent; color: #808094; padding: 4px; display: grid; place-items: center; }
+    .chat-header .friend-photo { width: 30px; height: 30px; border-radius: 50%; }
+    .chat-header .friend-name { margin-bottom: 3px; }
+    .mutual-badge { margin-left: auto; color: #149c71; background: #ecfaf5; font-size: 8px; padding: 5px 7px; border-radius: 10px; font-weight: 700; }
+    .chat-messages { padding: 12px; flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 8px; }
+    .chat-bubble { max-width: 83%; background: #f2f1f8; border-radius: 11px 11px 11px 3px; padding: 8px 10px; font-size: 10px; line-height: 1.45; color: #4c4d63; align-self: flex-start; overflow-wrap: anywhere; }
+    .chat-bubble.mine { align-self: flex-end; color: white; background: var(--purple); border-radius: 11px 11px 3px 11px; }
+    .chat-compose { display: flex; gap: 6px; padding: 10px; border-top: 1px solid #f0f0f5; }
+    .chat-compose input { min-width: 0; flex: 1; border: 1px solid #e9e9f0; border-radius: 9px; outline: 0; padding: 9px; font-size: 10px; }
+    .chat-compose input:focus { border-color: #b9aafa; }
+    .send-btn { width: 34px; border: 0; color: white; border-radius: 9px; background: var(--purple); display: grid; place-items: center; }
+    .right-note { border-top: 1px solid #f0f0f5; padding: 14px 15px; display: flex; gap: 9px; color: #85869a; font-size: 9px; line-height: 1.5; }
+    .right-note svg { flex: 0 0 auto; color: #a28df1; }
+    .toast { position: fixed; z-index: 20; left: 50%; bottom: 24px; transform: translate(-50%, 14px); opacity: 0; pointer-events: none; transition: .22s ease; background: #242238; color: white; border-radius: 12px; padding: 12px 16px; font-size: 12px; box-shadow: 0 12px 30px #17142644; display: flex; align-items: center; gap: 9px; max-width: calc(100% - 32px); }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast svg { color: #a891ff; flex: 0 0 auto; }
+    .safety-modal { position: fixed; inset: 0; z-index: 30; background: #17152577; display: none; place-items: center; padding: 20px; }
+    .safety-modal.open { display: grid; }
+    .modal-card { width: min(390px, 100%); background: white; border-radius: 17px; padding: 23px; box-shadow: 0 22px 70px #17142644; }
+    .modal-card h2 { font: 700 17px Manrope, sans-serif; margin: 0 0 12px; }
+    .modal-card p { color: #77788d; font-size: 12px; line-height: 1.6; margin: 0 0 17px; }
+    .modal-card button { border: 0; color: white; background: var(--purple); padding: 10px 14px; border-radius: 9px; font-size: 11px; font-weight: 700; }
+    .footer { color: #a0a0ae; font-size: 9px; text-align: center; padding: 22px 10px 0; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 210px minmax(360px, 1fr); }
+      .right-panel { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 250px; }
+      .right-panel .right-head, .right-panel .right-tabs, .right-panel .friend-content, .right-panel .request-content { grid-column: 1; }
+      .right-panel .right-note { grid-column: 2; grid-row: 1 / span 3; border-top: 0; border-left: 1px solid #f0f0f5; align-items: center; }
+      .friend-content { min-height: 120px; }
+      .friends-empty { padding: 20px; }
+    }
+    @media (max-width: 700px) {
+      .topbar { height: 62px; padding: 0 16px; gap: 18px; }
+      .brand { font-size: 20px; }
+      .brand-mark { width: 31px; height: 31px; border-radius: 10px; }
+      .nav { display: none; }
+      .online-pill { padding: 7px 9px; font-size: 10px; }
+      .profile-name { display: none; }
+      .google-signin { padding: 8px; gap: 5px; }
+      .google-word { display: none; }
+      .signout-button { font-size: 9px; }
+      .page { padding: 23px 14px 30px; }
+      .welcome { align-items: start; }
+      h1 { font-size: 23px; }
+      .welcome p { max-width: 270px; line-height: 1.5; }
+      .safety-link { font-size: 0; gap: 0; }
+      .layout { display: flex; flex-direction: column; gap: 14px; }
+      .stage-column { width: 100%; order: 1; }
+      .filters { width: 100%; order: 2; }
+      .right-panel { display: block; width: 100%; order: 3; }
+      .right-panel .right-note { border-left: 0; border-top: 1px solid #f0f0f5; }
+      .video-stage { aspect-ratio: 1.18; min-height: 300px; }
+      .local-card { width: 92px; height: 69px; right: 10px; bottom: 10px; }
+      .person-top { left: 11px; right: 11px; top: 11px; }
+      .person-info { left: 13px; bottom: 13px; }
+      .person-info h3 { font-size: 17px; }
+      .stage-actions { gap: 6px; }
+      .action-button { min-width: 75px; font-size: 10px; }
+      .action-button.like { min-width: 91px; }
+    }
+    @media (max-width: 400px) {
+      .online-pill { gap: 5px; }
+      .online-pill .online-copy { display: none; }
+      .video-stage { min-height: 270px; }
+      .action-button { min-width: 64px; gap: 4px; }
+      .action-button.like { min-width: 80px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="mingle home">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M4 6.75A2.75 2.75 0 0 1 6.75 4h9.5A2.75 2.75 0 0 1 19 6.75v5.5A2.75 2.75 0 0 1 16.25 15H11l-4.4 3.35c-.66.5-1.6.03-1.6-.8V15.8A2.75 2.75 0 0 1 4 13.25v-6.5Z" stroke="white" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 8.5h8M8 11.5h5" stroke="white" stroke-width="1.6" stroke-linecap="round"/></svg></span>
+      mingle
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      <button class="nav-link active" id="discoverNav"><span class="nav-dot"></span> Discover</button>
+      <button class="nav-link" id="friendsNav">Friends <span class="friend-count nav-friends-count">0</span></button>
+    </nav>
+    <div class="online-pill" aria-live="polite"><span class="online-pulse"></span><span class="online-copy">people online</span> <strong id="onlineCount">28,641</strong></div>
+    <div class="auth-control" id="authControl">
+      <button class="google-signin" id="googleSignInButton" type="button" aria-label="Sign in with Google"><span class="google-g" aria-hidden="true">G</span><span class="google-word">Sign in with Google</span></button>
+      <div class="signed-in-profile" id="signedInProfile" hidden><span class="profile-name" id="profileName"></span><span class="avatar" id="profileInitial" aria-hidden="true">G</span><img id="profilePhoto" alt="" hidden><button class="signout-button" id="signOutButton" type="button">Sign out</button></div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="welcome">
+      <div>
+        <div class="eyebrow"><span class="eyebrow-mark"></span> A little more human</div>
+        <h1>Meet someone new.</h1>
+        <p>One click, one conversation. See who you connect with.</p>
+      </div>
+      <button class="safety-link" id="safetyOpen" aria-label="Open community guidelines">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 20 6v5.5c0 4.8-3.3 8-8 9.5-4.7-1.5-8-4.7-8-9.5V6l8-3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Community guidelines
+      </button>
+    </div>
+
+    <div class="layout">
+      <aside class="panel filters" aria-label="Match filters">
+        <div class="panel-heading"><h2>Match preferences</h2><button class="reset" id="resetFilters">Reset</button></div>
+        <section class="filter-section">
+          <p class="filter-title">Show me <span>Choose one</span></p>
+          <div class="gender-options" role="group" aria-label="Gender filter">
+            <button class="gender-btn selected" data-gender="everyone" aria-pressed="true">Everyone</button>
+            <button class="gender-btn" data-gender="women" aria-pressed="false">Women</button>
+            <button class="gender-btn" data-gender="men" aria-pressed="false">Men</button>
+          </div>
+        </section>
+        <section class="filter-section">
+          <p class="filter-title">Country <span>249 options</span></p>
+          <div class="select-wrap">
+            <label class="sr-only" for="countrySelect">Choose a country</label>
+            <select id="countrySelect">
+              <option value="any">🌐 &nbsp; Anywhere</option>
+            </select>
+            <span class="select-arrow" aria-hidden="true">⌄</span>
+          </div>
+        </section>
+        <section class="filter-section">
+          <p class="filter-title">Languages <span id="languageCount"></span></p>
+          <div class="selected-languages" id="selectedLanguages" aria-live="polite"></div>
+          <div class="language-search"><label class="sr-only" for="languageSearch">Search all languages</label><input id="languageSearch" type="search" autocomplete="off" placeholder="Search all ISO languages…" aria-controls="languageOptions"></div>
+          <div class="language-list" id="languageOptions" role="listbox" aria-label="ISO 639-3 languages" aria-multiselectable="true"></div>
+          <div class="language-hint" id="languageHint">Search the complete ISO 639-3 language list</div>
+        </section>
+        <div class="filter-foot"><span>People in your pool</span><strong id="poolCount">28,641</strong></div>
+      </aside>
+
+      <section class="stage-column" aria-label="Video chat">
+        <div class="stage-head"><span class="stage-title" id="stageTitle">Your next conversation</span><span class="demo-label"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 11v5m0-8h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg> Demo preview</span></div>
+        <div class="video-stage" id="videoStage">
+          <div class="stage-placeholder" id="stagePlaceholder">
+            <span class="orb one"></span><span class="orb two"></span>
+            <div class="placeholder-copy">
+              <div class="hello-illustration"><svg viewBox="0 0 48 48" fill="none"><path d="M9 13.5A5.5 5.5 0 0 1 14.5 8h19a5.5 5.5 0 0 1 5.5 5.5v11a5.5 5.5 0 0 1-5.5 5.5H23l-8.8 6.4c-.8.6-1.9 0-1.9-1v-5.8A5.5 5.5 0 0 1 9 24.5v-11Z" stroke="white" stroke-width="2" stroke-linejoin="round"/><path d="M17 19h14M17 24h9" stroke="#dcd5ff" stroke-width="2" stroke-linecap="round"/><path d="m34 6 1.3-2.5L37 6l2.5 1.3L37 8.5l-1.7 2.5L34 8.5l-2.5-1.2L34 6Z" fill="#f3c7db"/></svg></div>
+              <h3>Ready for a little hello?</h3>
+              <p>Meet someone from somewhere new. Good conversations start with a simple hi.</p>
+              <button class="primary-button" id="startButton">Start matching <span aria-hidden="true">→</span></button>
+              <div class="camera-note">Your camera turns on when you start · You can leave anytime</div>
+            </div>
+          </div>
+          <div class="person-view" id="personView">
+            <img class="person-photo" id="personPhoto" alt="Your conversation partner">
+            <div class="person-shade"></div>
+            <div class="person-top"><span class="live-chip"><span class="green-dot"></span> CONNECTED</span><span class="timer-chip" id="timer">00:00</span></div>
+            <div class="person-info"><h3 id="personName"></h3><div class="person-meta"><span id="personCountry"></span><span class="meta-divider"></span><span id="personLanguage"></span></div><div class="person-tags" id="personTags"></div></div>
+            <div class="local-card"><video id="localVideo" autoplay playsinline muted></video><div class="local-camera-icon" id="cameraFallback"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="13" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="m16 10 5-3v10l-5-3" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>Camera preview</div><span class="local-label">You</span></div>
+          </div>
+        </div>
+        <div class="stage-actions">
+          <button class="action-button" id="skipButton" disabled><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h13m-5-5 5 5-5 5M19 5v14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Next</button>
+          <button class="action-button like" id="likeButton" disabled><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20.8 8.7c0 4.3-8.8 10-8.8 10s-8.8-5.7-8.8-10A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.8 2.1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Like</button>
+          <button class="action-button" id="stopButton" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 6v12m8-12v12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>End chat</button>
+        </div>
+        <p class="under-stage">A friendly reminder: be kind, respect boundaries, and keep personal information private.</p>
+      </section>
+
+      <aside class="panel right-panel" aria-label="Friends and chat">
+        <div class="right-head"><h2 id="rightHeading">Your friends</h2><span class="friend-count" id="friendCount">0</span></div>
+        <div class="right-tabs"><button class="right-tab active" id="friendsTab">Friends</button><button class="right-tab" id="requestsTab">Requests <span class="request-count" id="requestCount">0</span></button></div>
+        <div class="friend-content" id="friendContent">
+          <div class="friends-empty" id="friendsEmpty"><div class="empty-icon"><svg viewBox="0 0 28 28" fill="none"><path d="M14 23s-9-5.8-9-12a4.8 4.8 0 0 1 9-2.2A4.8 4.8 0 0 1 23 11c0 6.2-9 12-9 12Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8 14h3l1.4-2.2 2.1 4 1.4-2H20" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h3>Your people, right here</h3><p>When you both like each other, accept the friend request to add them and unlock private chat.</p></div>
+          <div class="friend-list" id="friendList" hidden></div>
+        </div>
+        <div class="request-content" id="requestContent" hidden><div class="request-empty" id="requestsEmpty"><div class="empty-icon"><svg viewBox="0 0 28 28" fill="none"><path d="M14 23s-9-5.8-9-12a4.8 4.8 0 0 1 9-2.2A4.8 4.8 0 0 1 23 11c0 6.2-9 12-9 12Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M14 9v6m0 3h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><h3>No friend requests yet</h3><p>When you both like each other, you can accept a request here.</p></div><div class="request-list" id="requestList"></div></div>
+        <div class="chat-view" id="chatView"></div>
+        <div class="right-note"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3 20 6v5.5c0 4.8-3.3 8-8 9.5-4.7-1.5-8-4.7-8-9.5V6l8-3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span><strong>Mutual likes, then acceptance.</strong> A friend request must be accepted before private chat opens.</span></div>
+      </aside>
+    </div>
+    <div class="footer">mingle is a demo experience. Matches and likes are simulated; live video matching needs a server connection.</div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 7 10 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="toastMessage"></span></div>
+  <div class="safety-modal" id="safetyModal" role="dialog" aria-modal="true" aria-labelledby="safetyTitle"><div class="modal-card"><h2 id="safetyTitle">Keep it kind, keep it safe</h2><p>Be respectful and leave any conversation that feels uncomfortable. Don't share your address, financial details, or private contact information with strangers. Use the next and end chat controls whenever you need them.</p><button id="safetyClose">Got it</button></div></div>
+
+  <script src="./country-data.js"></script>
+  <script src="./language-data.js"></script>
+  <script src="./auth-config.js"></script>
+  <script>
+    const people = [
+      { id: "noah", name: "Noah", gender: "men", country: "Brazil", countryCode: "BR", flag: "🇧🇷", languages: ["Portuguese", "English"], interest: "Music", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1200&q=85", likesBack: true },
+      { id: "amara", name: "Amara", gender: "women", country: "France", countryCode: "FR", flag: "🇫🇷", languages: ["French", "English"], interest: "Art", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=85", likesBack: true },
+      { id: "leo", name: "Leo", gender: "men", country: "India", countryCode: "IN", flag: "🇮🇳", languages: ["Hindi", "English"], interest: "Travel", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=85", likesBack: false },
+      { id: "sofia", name: "Sofia", gender: "women", country: "United States", countryCode: "US", flag: "🇺🇸", languages: ["Spanish", "English"], interest: "Photography", image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=85", likesBack: false },
+      { id: "mina", name: "Mina", gender: "women", country: "Japan", countryCode: "JP", flag: "🇯🇵", languages: ["Japanese", "English"], interest: "Design", image: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=1200&q=85", likesBack: true },
+      { id: "ethan", name: "Ethan", gender: "men", country: "United Kingdom", countryCode: "GB", flag: "🇬🇧", languages: ["English"], interest: "Books", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=85", likesBack: false }
+    ];
+    const selectedLanguages = new Set();
+    const pendingLikes = new Set();
+    let genderFilter = "everyone";
+    let currentPerson = null;
+    let cameraStream = null;
+    let cameraRequest = null;
+    let matchIndex = 0;
+    let sessionStartedAt = 0;
+    let timerInterval = null;
+    let toastTimeout = null;
+    let chatFriendId = null;
+    let activeTab = "friends";
+    let onlineCount = 28641;
+    const friends = new Map();
+    const incomingRequests = new Map();
+    const outgoingRequests = new Map();
+
+    const $ = (id) => document.getElementById(id);
+    const countryCatalog = window.ISO_COUNTRIES || [];
+    const countryByCode = new Map(countryCatalog.map((country) => [country.code, country]));
+    const languageCatalog = window.ISO_LANGUAGES || [];
+    const languageByCode = new Map(languageCatalog.map((language) => [language.code, language]));
+    const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    const filteredPeople = () => people.filter((person) => {
+      if (genderFilter !== "everyone" && person.gender !== genderFilter) return false;
+      const country = $("countrySelect").value;
+      if (country !== "any" && person.countryCode !== country) return false;
+      if (selectedLanguages.size && !person.languages.some((language) => [...selectedLanguages].some((code) => languageByCode.get(code)?.name === language))) return false;
+      return true;
+    });
+
+    function updateCounts() {
+      const country = $("countrySelect").value;
+      let factor = genderFilter === "everyone" ? 1 : .49;
+      if (country !== "any") factor *= .082;
+      if (selectedLanguages.size) factor *= Math.min(.75, .21 + selectedLanguages.size * .12);
+      const count = Math.max(filteredPeople().length, Math.round(onlineCount * factor));
+      $("poolCount").textContent = count.toLocaleString();
+      $("onlineCount").textContent = onlineCount.toLocaleString();
+    }
+
+    function showToast(message) {
+      $("toastMessage").textContent = message;
+      $("toast").classList.add("show");
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => $("toast").classList.remove("show"), 3100);
+    }
+    window.showAppToast = showToast;
+
+    function renderLanguageResults() {
+      const query = $("languageSearch").value.trim().toLocaleLowerCase();
+      const list = $("languageOptions");
+      if (!query) {
+        list.classList.remove("open");
+        list.innerHTML = "";
+        $("languageHint").textContent = selectedLanguages.size ? `${selectedLanguages.size} selected · search to add more` : `Search all ${languageCatalog.length.toLocaleString()} ISO 639-3 language entries`;
+        return;
+      }
+      const matches = languageCatalog.filter((language) => language.name.toLocaleLowerCase().includes(query) || language.code.toLocaleLowerCase().includes(query));
+      const visible = matches.slice(0, 40);
+      list.classList.add("open");
+      list.innerHTML = visible.length ? visible.map((language) => {
+        const selected = selectedLanguages.has(language.code);
+        return `<button type="button" class="language-option ${selected ? "selected" : ""}" role="option" aria-selected="${selected}" data-code="${escapeHtml(language.code)}"><span>${escapeHtml(language.name)}</span><small>${escapeHtml(language.code.toUpperCase())}</small></button>`;
+      }).join("") + (matches.length > 40 ? `<div class="language-more">Showing 40 of ${matches.length.toLocaleString()} matches. Keep typing to narrow the list.</div>` : "") : `<div class="language-empty">No language matches “${escapeHtml(query)}”.</div>`;
+      $("languageHint").textContent = `${matches.length.toLocaleString()} ${matches.length === 1 ? "match" : "matches"}`;
+    }
+
+    function renderSelectedLanguages() {
+      $("selectedLanguages").innerHTML = [...selectedLanguages].map((code) => {
+        const language = languageByCode.get(code);
+        if (!language) return "";
+        return `<span class="selected-language">${escapeHtml(language.name)}<button type="button" aria-label="Remove ${escapeHtml(language.name)}" data-remove-language="${escapeHtml(code)}">×</button></span>`;
+      }).join("");
+    }
+
+    function populateCountries() {
+      const select = $("countrySelect");
+      select.innerHTML = '<option value="any">🌐 &nbsp; Anywhere</option>' + countryCatalog.map((country) => `<option value="${escapeHtml(country.code)}">${escapeHtml(country.flag)} &nbsp; ${escapeHtml(country.name)}</option>`).join("");
+      $("languageCount").textContent = `${languageCatalog.length.toLocaleString()} entries`;
+      $("languageSearch").placeholder = `Search ${languageCatalog.length.toLocaleString()} languages…`;
+    }
+
+    function renderFriends() {
+      const list = $("friendList");
+      const entries = [...friends.values()];
+      $("friendCount").textContent = String(entries.length);
+      document.querySelectorAll(".nav-friends-count").forEach((el) => el.textContent = String(entries.length));
+      $("friendsEmpty").hidden = entries.length > 0;
+      list.hidden = entries.length === 0;
+      list.innerHTML = entries.map((friend) => `<div class="friend-row"><img class="friend-photo" src="${escapeHtml(friend.image)}" alt=""><div class="friend-copy"><div class="friend-name">${escapeHtml(friend.name)}</div><div class="friend-sub">${escapeHtml(friend.flag)} ${escapeHtml(friend.country)} · Mutual like</div></div><span class="friend-online" title="Online"></span><button class="open-chat" data-chat="${escapeHtml(friend.id)}">Chat</button></div>`).join("");
+      list.querySelectorAll("[data-chat]").forEach((button) => button.addEventListener("click", () => openChat(button.dataset.chat)));
+    }
+
+    function renderRequests() {
+      const incoming = [...incomingRequests.values()];
+      const outgoing = [...outgoingRequests.values()];
+      const total = incoming.length + outgoing.length;
+      $("requestCount").textContent = String(total);
+      $("requestsEmpty").hidden = total > 0;
+      $("requestList").innerHTML = [
+        ...incoming.map((person) => `<article class="request-card"><div class="request-person"><img class="friend-photo" src="${escapeHtml(person.image)}" alt=""><div class="friend-copy"><div class="friend-name">${escapeHtml(person.name)}</div><div class="friend-sub">${escapeHtml(person.flag)} ${escapeHtml(person.country)}</div></div></div><div class="request-status incoming">You both liked each other · Wants to be friends</div><div class="request-actions"><button class="accept-request" data-accept="${escapeHtml(person.id)}">Accept request</button><button data-decline="${escapeHtml(person.id)}">Decline</button></div></article>`),
+        ...outgoing.map((person) => `<article class="request-card"><div class="request-person"><img class="friend-photo" src="${escapeHtml(person.image)}" alt=""><div class="friend-copy"><div class="friend-name">${escapeHtml(person.name)}</div><div class="friend-sub">${escapeHtml(person.flag)} ${escapeHtml(person.country)}</div></div></div><div class="request-status">Friend request sent · Waiting for a response</div><div class="request-actions"><button data-cancel-request="${escapeHtml(person.id)}">Cancel request</button></div></article>`)
+      ].join("");
+    }
+
+    function showFriendsPanel() {
+      chatFriendId = null;
+      activeTab = "friends";
+      $("friendsTab").classList.add("active");
+      $("requestsTab").classList.remove("active");
+      $("rightHeading").textContent = "Your friends";
+      $("friendContent").hidden = false;
+      $("requestContent").hidden = true;
+      $("chatView").classList.remove("open");
+    }
+
+    function showRequestsPanel() {
+      chatFriendId = null;
+      activeTab = "requests";
+      $("friendsTab").classList.remove("active");
+      $("requestsTab").classList.add("active");
+      $("rightHeading").textContent = "Friend requests";
+      $("friendContent").hidden = true;
+      $("requestContent").hidden = false;
+      $("chatView").classList.remove("open");
+    }
+
+    function renderChat() {
+      const friend = friends.get(chatFriendId);
+      if (!friend) { $("chatView").classList.remove("open"); return; }
+      $("chatView").innerHTML = `<div class="chat-header"><button class="back-chat" id="backToFriends" aria-label="Back to friends"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m15 18-6-6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><img class="friend-photo" src="${escapeHtml(friend.image)}" alt=""><div><div class="friend-name">${escapeHtml(friend.name)}</div><div class="friend-sub">${escapeHtml(friend.flag)} ${escapeHtml(friend.country)}</div></div><span class="mutual-badge">MUTUAL LIKE</span></div><div class="chat-messages" id="chatMessages">${friend.messages.map((message) => `<div class="chat-bubble ${message.mine ? "mine" : ""}">${escapeHtml(message.text)}</div>`).join("")}</div><form class="chat-compose" id="chatForm"><label class="sr-only" for="chatInput">Write a message</label><input id="chatInput" maxlength="300" autocomplete="off" placeholder="Write a message…"><button class="send-btn" aria-label="Send message"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="m21 3-7.2 18-3.9-7.9L2 9.2 21 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 13 21 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></form>`;
+      $("chatView").classList.add("open");
+      $("backToFriends").addEventListener("click", closeChat);
+      $("chatForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const input = $("chatInput");
+        const text = input.value.trim();
+        if (!text || !friends.has(chatFriendId)) return;
+        friends.get(chatFriendId).messages.push({ text, mine: true });
+        renderChat();
+        $("chatMessages").scrollTop = $("chatMessages").scrollHeight;
+        $("chatInput").focus();
+      });
+      $("chatMessages").scrollTop = $("chatMessages").scrollHeight;
+    }
+
+    function openChat(id) {
+      if (!friends.has(id)) return;
+      chatFriendId = id;
+      activeTab = "friends";
+      $("friendsTab").classList.add("active");
+      $("requestsTab").classList.remove("active");
+      $("rightHeading").textContent = "Your messages";
+      $("friendContent").hidden = true;
+      $("requestContent").hidden = true;
+      renderChat();
+    }
+
+    function closeChat() {
+      chatFriendId = null;
+      activeTab = "friends";
+      $("friendsTab").classList.add("active");
+      $("rightHeading").textContent = "Your friends";
+      $("friendContent").hidden = false;
+      $("requestContent").hidden = true;
+      $("chatView").classList.remove("open");
+    }
+
+    function acceptRequest(id) {
+      const person = incomingRequests.get(id);
+      if (!person) return;
+      incomingRequests.delete(id);
+      pendingLikes.delete(id);
+      friends.set(id, { ...person, messages: [{ text: "Hi! Glad we connected 👋", mine: false }] });
+      renderRequests();
+      renderFriends();
+      showFriendsPanel();
+      openChat(id);
+      showToast(`You and ${person.name} are friends now. Say hello!`);
+    }
+
+    function declineRequest(id) {
+      const person = incomingRequests.get(id);
+      if (!person) return;
+      incomingRequests.delete(id);
+      pendingLikes.delete(id);
+      renderRequests();
+      showToast(`Friend request from ${person.name} declined.`);
+    }
+
+    function cancelRequest(id) {
+      const person = outgoingRequests.get(id);
+      if (!person) return;
+      outgoingRequests.delete(id);
+      pendingLikes.delete(id);
+      renderRequests();
+      showToast(`Friend request to ${person.name} canceled.`);
+    }
+
+    async function enableCamera() {
+      if (cameraStream || cameraRequest || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+      cameraRequest = (async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          if (!currentPerson) {
+            stream.getTracks().forEach((track) => track.stop());
+            return;
+          }
+          cameraStream = stream;
+          $("localVideo").srcObject = cameraStream;
+          $("localVideo").classList.add("on");
+          $("cameraFallback").style.display = "none";
+        } catch (_) {
+          if (currentPerson) showToast("Camera unavailable — continuing in demo mode.");
+        } finally {
+          cameraRequest = null;
+        }
+      })();
+      return cameraRequest;
+    }
+
+    function startPerson(person) {
+      if (!person) {
+        showToast("No sample profiles match those filters. Try a wider search.");
+        return;
+      }
+      currentPerson = person;
+      $("stagePlaceholder").style.display = "none";
+      $("personView").classList.add("visible");
+      $("personPhoto").src = person.image;
+      $("personPhoto").alt = `${person.name}, your conversation partner`;
+      $("personName").textContent = person.name;
+      $("personCountry").textContent = `${person.flag} ${person.country}`;
+      $("personLanguage").textContent = person.languages[0];
+      $("personTags").innerHTML = `<span>${escapeHtml(person.interest)}</span><span>Open to chat</span>`;
+      $("stageTitle").textContent = `You're chatting with ${person.name}`;
+      $("skipButton").disabled = false;
+      $("stopButton").disabled = false;
+      const requestPending = pendingLikes.has(person.id);
+      $("likeButton").disabled = requestPending || friends.has(person.id);
+      $("likeButton").classList.toggle("liked", requestPending || friends.has(person.id));
+      $("likeButton").innerHTML = friends.has(person.id) ? "✓ Friends" : incomingRequests.has(person.id) ? "Request received" : outgoingRequests.has(person.id) ? "Request sent" : requestPending ? "<span aria-hidden=\"true\">♥</span> Liked" : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20.8 8.7c0 4.3-8.8 10-8.8 10s-8.8-5.7-8.8-10A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.8 2.1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Like';
+      sessionStartedAt = Date.now();
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - sessionStartedAt) / 1000);
+        $("timer").textContent = `${String(Math.floor(elapsed / 60)).padStart(2, "0")}:${String(elapsed % 60).padStart(2, "0")}`;
+      }, 1000);
+      enableCamera();
+    }
+
+    function getNextPerson() {
+      const pool = filteredPeople();
+      if (!pool.length) return null;
+      const person = pool[matchIndex % pool.length];
+      matchIndex += 1;
+      return person;
+    }
+
+    function startMatching() {
+      const person = getNextPerson();
+      if (!person) return startPerson(null);
+      $("stagePlaceholder").style.display = "none";
+      $("personView").classList.remove("visible");
+      $("stageTitle").textContent = "Finding someone for you…";
+      $("startButton").disabled = true;
+      $("startButton").textContent = "Finding someone…";
+      setTimeout(() => {
+        startPerson(person);
+        $("startButton").disabled = false;
+        $("startButton").textContent = "Start matching →";
+      }, 650);
+    }
+
+    function endSession(showWelcome = true) {
+      currentPerson = null;
+      clearInterval(timerInterval);
+      if (cameraStream) {
+        cameraStream.getTracks().forEach((track) => track.stop());
+        cameraStream = null;
+      }
+      $("localVideo").srcObject = null;
+      $("localVideo").classList.remove("on");
+      $("cameraFallback").style.display = "block";
+      $("personView").classList.remove("visible");
+      $("skipButton").disabled = true;
+      $("stopButton").disabled = true;
+      $("likeButton").disabled = true;
+      $("likeButton").classList.remove("liked");
+      $("likeButton").innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M20.8 8.7c0 4.3-8.8 10-8.8 10s-8.8-5.7-8.8-10A4.7 4.7 0 0 1 12 6.6a4.7 4.7 0 0 1 8.8 2.1Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Like';
+      $("timer").textContent = "00:00";
+      if (showWelcome) {
+        $("stagePlaceholder").style.display = "grid";
+        $("stageTitle").textContent = "Your next conversation";
+      }
+    }
+
+    function likeCurrentPerson() {
+      if (!currentPerson) return;
+      const person = currentPerson;
+      if (friends.has(person.id)) return showToast(`You and ${person.name} are already friends.`);
+      if (pendingLikes.has(person.id)) return showToast("Your friend request is already pending.");
+      pendingLikes.add(person.id);
+      if (person.likesBack) {
+        incomingRequests.set(person.id, person);
+        renderRequests();
+        showRequestsPanel();
+        showToast(`It's a mutual like! ${person.name} sent you a friend request. Accept it to connect.`);
+      } else {
+        outgoingRequests.set(person.id, person);
+        renderRequests();
+        showRequestsPanel();
+        showToast(`Friend request sent to ${person.name}. Chat unlocks after they accept.`);
+      }
+      $("likeButton").disabled = true;
+      $("likeButton").classList.add("liked");
+      $("likeButton").innerHTML = "Request sent";
+    }
+
+    document.querySelectorAll(".gender-btn").forEach((button) => button.addEventListener("click", () => {
+      genderFilter = button.dataset.gender;
+      document.querySelectorAll(".gender-btn").forEach((item) => { const selected = item === button; item.classList.toggle("selected", selected); item.setAttribute("aria-pressed", String(selected)); });
+      updateCounts();
+    }));
+    $("languageSearch").addEventListener("input", renderLanguageResults);
+    $("languageSearch").addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      const first = $("languageOptions").querySelector("[data-code]");
+      if (first) { event.preventDefault(); first.click(); }
+    });
+    $("languageOptions").addEventListener("click", (event) => {
+      const option = event.target.closest("[data-code]");
+      if (!option) return;
+      if (selectedLanguages.has(option.dataset.code)) selectedLanguages.delete(option.dataset.code);
+      else selectedLanguages.add(option.dataset.code);
+      renderSelectedLanguages();
+      renderLanguageResults();
+      updateCounts();
+    });
+    $("selectedLanguages").addEventListener("click", (event) => {
+      const remove = event.target.closest("[data-remove-language]");
+      if (!remove) return;
+      selectedLanguages.delete(remove.dataset.removeLanguage);
+      renderSelectedLanguages();
+      renderLanguageResults();
+      updateCounts();
+    });
+    $("countrySelect").addEventListener("change", updateCounts);
+    $("resetFilters").addEventListener("click", () => {
+      genderFilter = "everyone";
+      $("countrySelect").value = "any";
+      selectedLanguages.clear();
+      $("languageSearch").value = "";
+      renderSelectedLanguages();
+      renderLanguageResults();
+      document.querySelectorAll(".gender-btn").forEach((button) => { const selected = button.dataset.gender === "everyone"; button.classList.toggle("selected", selected); button.setAttribute("aria-pressed", String(selected)); });
+      document.querySelectorAll(".language-chip").forEach((button) => { button.classList.remove("selected"); button.setAttribute("aria-pressed", "false"); });
+      updateCounts();
+      showToast("Match preferences reset.");
+    });
+    $("startButton").addEventListener("click", startMatching);
+    $("skipButton").addEventListener("click", () => {
+      const person = getNextPerson();
+      if (!person) return showToast("No sample profiles match those filters. Try a wider search.");
+      startPerson(person);
+    });
+    $("stopButton").addEventListener("click", () => { endSession(); showToast("Chat ended. Ready for another hello?"); });
+    $("likeButton").addEventListener("click", likeCurrentPerson);
+    $("friendsTab").addEventListener("click", showFriendsPanel);
+    $("requestsTab").addEventListener("click", showRequestsPanel);
+    $("requestList").addEventListener("click", (event) => {
+      const accept = event.target.closest("[data-accept]");
+      const decline = event.target.closest("[data-decline]");
+      const cancel = event.target.closest("[data-cancel-request]");
+      if (accept) acceptRequest(accept.dataset.accept);
+      else if (decline) declineRequest(decline.dataset.decline);
+      else if (cancel) cancelRequest(cancel.dataset.cancelRequest);
+    });
+    $("friendsNav").addEventListener("click", () => { document.querySelector(".right-panel").scrollIntoView({ behavior: "smooth", block: "center" }); });
+    $("discoverNav").addEventListener("click", () => { $("startButton").scrollIntoView({ behavior: "smooth", block: "center" }); });
+    $("safetyOpen").addEventListener("click", () => $("safetyModal").classList.add("open"));
+    $("safetyClose").addEventListener("click", () => $("safetyModal").classList.remove("open"));
+    $("safetyModal").addEventListener("click", (event) => { if (event.target === $("safetyModal")) $("safetyModal").classList.remove("open"); });
+    setInterval(() => {
+      onlineCount += Math.floor(Math.random() * 29) - 13;
+      updateCounts();
+    }, 3600);
+    populateCountries();
+    renderFriends();
+    renderRequests();
+    updateCounts();
+  </script>
+  <script type="module" src="./firebase-auth.js"></script>
+</body>
+</html>
